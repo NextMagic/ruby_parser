@@ -38,6 +38,15 @@ def get_mbsa(xml,string)
   end
   return kblist
 end
+def get_antipattern(string)
+  anti_pattern_Non  = string.match(/InternalNonCrcPatternVer\W+REG_DWORD\W+(0x[\da-z]+)/)
+  #anti_pattern = string.match(/InternalPatternVer\W+REG_DWORD\W+(0x[\da-z]+)/)
+  if  anti_pattern_Non != nil then
+    return anti_pattern_Non[1]
+  else
+    return 'Unstall'
+  end
+end
   CSV.open("resule.csv", "wb") do |csv|
   csv << ["HOST Name", "Windows Update","SQL Update","Office Update", "Anti_Virus Pattern","Java Version","Adobe Verson","Adobe Flash Version"]
 
@@ -73,7 +82,8 @@ end
     anfile = Dir.glob(anti_files)
     antidata = File.open(anfile[0])
     antifile  = filter_garbled(antidata.each_char)
-    #puts antifile
+    anti_pattern = get_antipattern(antifile)
+
 
     #adobe
     adobe_files = File.join(f,"PC", "*.adobe.log")
@@ -97,7 +107,13 @@ end
     if off_list.count == 0 then off_list << 'updated to the latest'  end
     if (javalist == '')then javalist << 'No Java' end
     if (flashversion == '')then flashversion << 'No Flash' end
-      if (adobe_version == '')then adobe_version << 'No Adobe' end
-    csv << [ipaddr.join(','),w_list.join(','),sql_list.join(','),off_list.join(','),'',javalist,adobe_version,flashversion]
+    if (adobe_version == '')then adobe_version << 'No Adobe' end
+    if (anti_pattern == 'Unstall')then
+      anti_pattern << 'No Install'
+    else
+      anti_patt = Integer(anti_pattern,0).to_s
+      anti_pattern = 'ver.'<< anti_patt[0]<<anti_patt[1]<<'.'<<anti_patt[2]<<anti_patt[3]<<anti_patt[4]<<'.'<<anti_patt[5]<<anti_patt[6]
+    end
+    csv << [ipaddr.join(','),w_list.join(','),sql_list.join(','),off_list.join(','),anti_pattern,javalist,adobe_version,flashversion]
   end
 end
